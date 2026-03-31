@@ -161,20 +161,29 @@ demo/cmd -x "show disk usage sorted by size"   # -x = execute after confirm
 demo/cmd -c "list open ports"                   # -c = copy to clipboard
 ```
 
-**One-liner version** - add to your `.zshrc` and use `cmd` from anywhere:
+**Shell function version** - add to your `.zshrc` and use `cmd` from anywhere:
 
 ```bash
-cmd() { r=$(apfel -q -s 'Reply ONLY with a shell command. No markdown, no explanation.' "$*" | sed '/^```/d;s/^[[:space:]]*//;/^$/d'); printf '\e[32m$\e[0m %s\n' "$r"; printf '%s' "$r" | pbcopy; read -rp 'Run? [y/N] ' a && [[ $a == y ]] && eval "$r"; }
+# cmd — natural language to shell command (apfel)
+cmd() {
+  local x=false c=false
+  while [[ "$1" == -* ]]; do
+    case "$1" in -x) x=true; shift;; -c) c=true; shift;; *) break;; esac
+  done
+  local r=$(apfel -q -s 'Output ONLY a shell command. No explanation, no markdown, no comments, no extra text. Just the command.' "$*" | sed '/^```/d;/^#/d;s/^[[:space:]]*//;/^$/d' | head -1)
+  [[ -z "$r" ]] && echo "no command generated" && return 1
+  printf '\e[32m$\e[0m %s\n' "$r"
+  $c && printf '%s' "$r" | pbcopy && echo "(copied)"
+  if $x; then
+    printf 'Run? [y/N] '; read -r a; [[ "$a" == y ]] && eval "$r"
+  fi
+}
 ```
 
 ```bash
-cmd find all swift files larger than 1MB
-# $ find . -name "*.swift" -size +1M
-# (copied to clipboard)
-# Run? [y/N]
-
-cmd show disk usage sorted by size
-cmd kill whatever is using port 3000
+cmd find all swift files larger than 1MB     # shows: $ find . -name "*.swift" -size +1M
+cmd -c show disk usage sorted by size        # shows command + copies to clipboard
+cmd -x what process is using port 3000       # shows command + asks to run it
 cmd list all git branches merged into main
 cmd count lines of code by language
 ```
