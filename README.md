@@ -1,6 +1,6 @@
 # apfel
 
-[![Version 0.6.6](https://img.shields.io/badge/version-0.6.6-blue)](https://github.com/Arthur-Ficial/apfel)
+[![Version 0.6.7](https://img.shields.io/badge/version-0.6.7-blue)](https://github.com/Arthur-Ficial/apfel)
 [![Swift 6.3+](https://img.shields.io/badge/Swift-6.3%2B-F05138?logo=swift&logoColor=white)](https://swift.org)
 [![macOS 26.4+](https://img.shields.io/badge/macOS-26.4%2B-000000?logo=apple&logoColor=white)](https://developer.apple.com/macos/)
 [![No Xcode Required](https://img.shields.io/badge/Xcode-not%20required-orange)](https://developer.apple.com/xcode/resources/)
@@ -27,7 +27,7 @@ Every Mac with Apple Silicon has a **built-in LLM** - Apple's on-device foundati
 
 ## Requirements
 
-- Apple Silicon Mac (M1 or later)
+- Apple Silicon Mac
 - macOS 26.4 Tahoe or newer (released March 24, 2026)
 - [Apple Intelligence enabled](https://support.apple.com/en-us/121115)
 - **Homebrew install:** nothing else needed

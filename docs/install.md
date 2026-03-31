@@ -4,7 +4,7 @@
 
 | Requirement | Details |
 |-------------|---------|
-| **Mac** | Apple Silicon (M1 or later) |
+| **Mac** | Apple Silicon |
 | **macOS** | **macOS 26.4** or later |
 | **Apple Intelligence** | Must be [enabled in System Settings](https://support.apple.com/en-us/121115) |
 
