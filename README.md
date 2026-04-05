@@ -33,9 +33,8 @@ Every Mac with Apple Silicon has a **built-in LLM** - Apple's on-device foundati
 ```bash
 brew tap Arthur-Ficial/tap
 brew install apfel
+brew upgrade apfel
 ```
-
-Update: `brew upgrade apfel`
 
 **Build from source:**
 
