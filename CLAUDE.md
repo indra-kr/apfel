@@ -35,6 +35,11 @@ The Debug GUI has been extracted to its own repo: [apfel-gui](https://github.com
 - **Honest about limitations.** 4096 token context, no embeddings, no vision - say so clearly.
 - **Clean code, clean logic.** No hacks. Proper error types. Real token counts.
 - **Swift 6 strict concurrency.** No data races.
+- **Usable security.** Secure defaults that don't get in the way.
+
+### Documentation style:
+
+- **Links in docs and README:** Always use the URL/path as the anchor text, not generic phrases like "full guide" or "click here". Example: `[docs/background-service.md](docs/background-service.md)` not `[full guide](docs/background-service.md)`.
 
 ## Architecture
 

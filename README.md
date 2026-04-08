@@ -121,7 +121,7 @@ resp = client.chat.completions.create(
 print(resp.choices[0].message.content)
 ```
 
-Run in background (auto-restarts, starts at login - [full guide](docs/background-service.md)):
+Run in background (auto-restarts, starts at login - [docs/background-service.md](docs/background-service.md)):
 
 ```bash
 brew services start apfel
@@ -271,7 +271,7 @@ apfel --serve --mcp ./mcp/calculator/server.py                   # server mode
 apfel --chat --mcp ./mcp/calculator/server.py                    # chat mode
 ```
 
-Ships with a calculator MCP server at `mcp/calculator/`. See [MCP docs](docs/mcp-calculator.md) for details.
+Ships with a calculator MCP server at `mcp/calculator/`. See [docs/mcp-calculator.md](docs/mcp-calculator.md) for details.
 
 ## OpenAI API Compatibility
 
@@ -283,7 +283,7 @@ Ships with a calculator MCP server at `mcp/calculator/`. See [MCP docs](docs/mcp
 | `GET /v1/models` | Supported | Returns `apple-foundationmodel` |
 | `GET /health` | Supported | Model availability, context window, languages |
 | `GET /v1/logs`, `/v1/logs/stats` | Debug only | Requires `--debug` |
-| Tool calling | Supported | Native `ToolDefinition` + JSON detection. See [Tool Calling Guide](docs/tool-calling-guide.md) |
+| Tool calling | Supported | Native `ToolDefinition` + JSON detection. See [docs/tool-calling-guide.md](docs/tool-calling-guide.md) |
 | `response_format: json_object` | Supported | Via system prompt injection |
 | `temperature`, `max_tokens`, `seed` | Supported | Mapped to `GenerationOptions` |
 | `stream: true` | Supported | SSE with usage stats in final chunk |
@@ -294,7 +294,7 @@ Ships with a calculator MCP server at `mcp/calculator/`. See [MCP docs](docs/mcp
 | `POST /v1/embeddings` | 501 | Embeddings not available on-device |
 | `logprobs=true`, `n>1`, `stop`, `presence_penalty`, `frequency_penalty` | 400 | Rejected explicitly. `n=1` and `logprobs=false` are accepted as no-ops |
 | Multi-modal (images) | 400 | Rejected with clear error |
-| `Authorization` header | Supported | Required when `--token` is set. See [Server Security](docs/server-security.md) |
+| `Authorization` header | Supported | Required when `--token` is set. See [docs/server-security.md](docs/server-security.md) |
 
 Full API spec: [openai/openai-openapi](https://github.com/openai/openai-openapi)
 
@@ -306,7 +306,7 @@ Full API spec: [openai/openai-openapi](https://github.com/openai/openai-openapi)
 | Context window | **4096 tokens** (input + output combined) |
 | Platform | macOS 26+, Apple Silicon only |
 | Model | One model (`apple-foundationmodel`), not configurable |
-| Guardrails | Apple's safety system may block benign prompts (use `--permissive` to reduce false positives). See [comparison](docs/PERMISSIVE.md) |
+| Guardrails | Apple's safety system may block benign prompts (use `--permissive` to reduce false positives). See [docs/PERMISSIVE.md](docs/PERMISSIVE.md) |
 | Speed | On-device, not cloud-scale - a few seconds per response |
 | No embeddings / vision | Not available on-device |
 
@@ -471,7 +471,7 @@ apfel --version
 apfel --help
 ```
 
-See [Server Security](docs/server-security.md) for detailed documentation on security options.
+See [docs/server-security.md](docs/server-security.md) for detailed documentation on security options.
 
 ### Exit Codes
 
