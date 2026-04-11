@@ -133,6 +133,7 @@ When a new issue comes in, follow this process:
    - Does it align with the golden goal and non-negotiable principles?
    - Can you reproduce it?
    - Check comments for additional context and links
+   - Verify the user's environment against known gotchas (macOS 26 Tahoe required, Apple Silicon only, Apple Intelligence enabled, Siri + device language match)
 3. **Fix** if valid:
    - Write tests first (TDD) for bugs
    - Keep changes minimal and KISS
@@ -143,6 +144,129 @@ When a new issue comes in, follow this process:
    - What was fixed (or why it was closed without a fix)
    - How to update (`brew upgrade apfel`)
 6. **Landing page** (apfel.franzai.com) is a separate Cloudflare Pages project, not in this repo
+
+## Handling Pull Requests
+
+When a PR is opened, follow this process. Scale the rigor to the PR type - docs-only PRs skip the security audit and test coverage steps, code PRs get the full treatment.
+
+### 1. Fetch everything
+
+```bash
+gh pr view <n> --repo Arthur-Ficial/apfel --json title,author,body,state,mergeable,mergeStateStatus,reviews,comments,commits,statusCheckRollup,files,headRefName,headRepositoryOwner
+gh pr diff <n> --repo Arthur-Ficial/apfel                             # full diff
+gh api repos/Arthur-Ficial/apfel/pulls/<n>/comments                   # inline review comments
+git fetch origin pull/<n>/head:pr-<n>-head && git checkout pr-<n>-head # actual tree
+```
+
+### 2. Vet the author
+
+- First-time contributor to apfel? (`gh pr list --repo Arthur-Ficial/apfel --state all --author <login>`)
+- Legitimate GitHub profile? Check `gh api users/<login>` for public_repos, followers, blog, creation date
+- Commit author email matches the GitHub account (spot typo-squatting)
+- Any red flags in prior public work
+
+### 3. Classify the PR type
+
+| Type | What it touches | Process depth |
+|------|-----------------|---------------|
+| **Docs-only** | `docs/**`, `README.md`, `CLAUDE.md` | Factual accuracy, link validity, alignment with golden goal, tone |
+| **Test-only** | `Tests/**` | Test quality, no false positives/negatives, actually exercises new behavior |
+| **Code: non-network** | `Sources/**` (no `URLSession`, `Process`, file I/O outside sandbox) | Full architecture + test coverage + build + tests |
+| **Code: network/parsing/auth** | MCP, server, OpenAI handlers, auth, URL parsing | **Full security audit** on top of the code-PR process |
+| **Build/CI** | `Package.swift`, `.github/workflows/**`, `Makefile`, `scripts/**` | Reproducibility check, supply chain (pinned versions), runner safety |
+
+### 4. Read every changed file
+
+No skimming. Use `git show pr-<n>-head:<path>` or read from the checked-out tree. For large PRs, map the changes before diving in: list files, group by concern, read in dependency order.
+
+### 5. Security audit (code PRs, especially network/parsing/auth)
+
+- **Input validation** - URL schemes (reject `file://`, `javascript://`), paths (no directory traversal), JSON (malformed + deeply nested), env vars (empty handling)
+- **Authentication** - bearer tokens over HTTPS only, no token echo in logs, no token in `ps aux` (prefer env vars), per-server token scoping
+- **TLS** - no cert skipping, no insecure fallback
+- **Resource limits** - response size cap (no OOM from malicious server), timeouts, concurrent request caps
+- **Injection risks** - shell (unquoted `$(...)`), HTTP header (CRLF), JSON-in-string, path
+- **Secrets leakage** - `--debug` logs, error messages, crash dumps, test fixtures
+- **Secure by default** - opt-in for dangerous features, loud warnings, conservative defaults
+- **Concurrency** - `@unchecked Sendable` needs proof of thread safety, actor isolation correct, no missing locks
+- **Supply chain** - new dependencies pinned, scope justified, no transitive `unsafeFlags`
+
+Priority-rank findings:
+- **P0** blocks merge (security, data loss, credential leak, regression to previous fix)
+- **P1** should fix before merge (correctness, test coverage, architectural consistency)
+- **P2** nice to have (code quality, follow-up PR acceptable)
+
+### 6. Architecture review
+
+- Does it fit the golden goal (UNIX tool + OpenAI server + chat)?
+- Does it respect the non-negotiable principles (100% on-device, honest limits, clean code, Swift 6 strict concurrency, usable security)?
+- Does it introduce cross-target dependencies that violate the `ApfelCore` (pure) / `ApfelCLI` (CLI types) / `apfel` (FoundationModels + Hummingbird) layering?
+- Are the existing patterns followed (test harness, error types, context strategy, retry)?
+
+### 7. Test coverage check (code PRs)
+
+- New flag? Must have happy-path + every validation error test in `Tests/apfelTests/CLIArgumentsTests.swift`
+- New public API on a pure `ApfelCore` type? Unit test in the corresponding `Tests/apfelTests/*Tests.swift`
+- New network or subprocess surface? Integration test wired into `Tests/integration/` using the existing conftest pattern - **standalone manual scripts in `mcp/`, `scripts/`, etc. do not count**
+- Error tests must use the tightened style: `catch let e as CLIParseError { assertTrue(e.message.contains("...")) }` - not just `threw = true`
+
+### 8. Build + run tests on the PR branch
+
+```bash
+git checkout pr-<n>-head
+swift build                                              # must be clean, no warnings
+swift run apfel-tests                                    # existing unit tests must still pass
+# For code PRs, also:
+make install && apfel --serve --port 11434 &
+apfel --serve --port 11435 --mcp mcp/calculator/server.py &
+sleep 4
+python3 -m pytest Tests/integration/ -v                  # must pass, 0 skipped
+pkill -f "apfel --serve"
+```
+
+### 9. Verify CI on the PR
+
+- `gh pr view <n> --repo Arthur-Ficial/apfel --json statusCheckRollup`
+- First-time contributors trigger `action_required` on Actions - the CI run needs manual approval before it executes. Approve it before reviewing so the PR has real CI results to reference.
+
+### 10. Review
+
+Post a structured review via `gh pr review <n> --repo Arthur-Ficial/apfel --request-changes|--approve|--comment --body "..."`:
+
+- **Open with genuine praise** for what works. Reviews that lead with negatives make contributors defensive.
+- **Summary table** of findings (P0/P1/P2, severity, area, one-line summary)
+- **Each finding** gets its own subsection: exact file:line reference, reproducer where possible, concrete fix with code sample
+- **What I verified** section listing what's clean (shows the contributor you actually read everything)
+- **Suggested path forward** ranked by minimum-viable-merge vs full fix
+- **Credit co-authors** - when landing, use `Co-Authored-By: <Name> <email>` in the merge commit
+
+Do not approve code PRs with P0 findings. For docs-only PRs, a request-changes on a broken link is appropriate. For first-time contributors, err on the side of gentler tone.
+
+### 11. Merge decision
+
+- **Approve + merge** only after: all P0/P1 resolved (or explicitly punted with user's OK), CI green, tests green on the branch locally
+- **Squash-merge** by default for clean history. Preserve the contributor's commit messages in the squash body so attribution is intact.
+- **Do not release** just because you merged. A merge and a release are separate user decisions - ask first.
+- **Close linked issues** via `Closes #N` in the PR body or commit message, otherwise do it manually after merge.
+
+### 12. After merge
+
+- Verify main locally: `git checkout main && git pull --rebase origin main`
+- Run the full test suite on the merged commit as a sanity check
+- If any follow-up is needed (P2 items punted, new issues surfaced), file them as GitHub issues before moving on
+- **Clean up the local PR branch**: `git branch -D pr-<n>-head`
+
+### PR anti-patterns to reject
+
+- No tests for new flags or new behavior
+- Standalone test scripts that require manual terminal orchestration (not wired into CI)
+- `@unchecked Sendable` without explicit thread-safety proof
+- `URLSession.shared` for new network code (shared cookie jar, shared cache)
+- Bearer tokens sent over `http://`
+- New `exit()` calls in pure parsing functions
+- Manual edits to `.version`, `README.md` version badge, or `Sources/BuildInfo.swift` (these are `make build` outputs)
+- Merge commits in the PR branch history (prefer rebase and squash)
+- Contributor working from their fork's `main` branch instead of a feature branch (cosmetic, but harder to land cleanly)
 
 ## Publishing a Release
 
