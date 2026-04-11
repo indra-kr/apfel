@@ -191,3 +191,7 @@ If you need a browser client instead of Continue:
 - use `apfel --serve --cors --allowed-origins "<your local origin>"`
 
 For security and browser details, see [server-security.md](server-security.md).
+
+---
+
+Huge thanks to [**@dan-snelson** (Dan K. Snelson)](https://github.com/dan-snelson) for contributing this guide and for documenting the two-model review/apply workflow. See also his companion blog post on the `cli`/`clo` Codex helpers: [Leveraging multiple, repository-specific OpenAI Codex API Keys with Visual Studio Code on macOS](https://snelson.us/2026/04/many-to-one-api-keys/).
