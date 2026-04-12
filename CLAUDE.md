@@ -333,8 +333,25 @@ The custom tap (`Arthur-Ficial/homebrew-tap`) is a secondary channel for apfel-f
 
 ## CI / GitHub Actions
 
-- `macos-26` runner. Selects latest Xcode automatically.
-- SDK 26.4+ required for FoundationModels token-counting APIs.
-- **CI workflow** (`ci.yml`): build + unit tests + structural integration tests on every push/PR to main. GitHub runners lack Apple Intelligence, so model-dependent tests are skipped in CI.
-- **Releases run locally** via `make release` (`scripts/publish-release.sh`). This runs the full 7-suite integration test qualification on a Mac with Apple Intelligence. GitHub Actions cannot do this.
-- Release docs: [docs/release.md](docs/release.md)
+**IMPORTANT: GitHub CI runs only a SUBSET of tests.** GitHub-hosted `macos-26` runners are Intel Macs with no Apple Intelligence. Most integration tests need the model and cannot run there.
+
+**What GitHub CI runs (automatic, every push/PR):**
+- Build (release binary)
+- 362 unit tests (pure Swift, no model needed)
+- 21 model-free integration tests (CLI flags, help, version, file handling)
+- Total: ~383 tests
+
+**What GitHub CI CANNOT run (no Apple Intelligence):**
+- Server response tests (openai_client, openapi_spec, openapi_conformance)
+- MCP tool execution tests (mcp_server)
+- Security tests that send real requests (security)
+- Benchmark tests (performance)
+- Chat mode tests (test_chat)
+- Total: ~136 integration tests
+
+**What runs the full suite (local, before every release):**
+- `make preflight` or `make release` on a Mac with Apple Intelligence
+- 362 unit + 157 integration (7 suites) = 519 tests, 0 skipped
+- This is the REAL qualification gate. GitHub CI is a safety net, not the source of truth.
+
+SDK 26.4+ required for FoundationModels token-counting APIs. Release docs: [docs/release.md](docs/release.md)

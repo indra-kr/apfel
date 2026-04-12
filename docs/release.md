@@ -56,15 +56,15 @@ make release TYPE=minor         # minor bump (1.0.x -> 1.1.0)
 make release TYPE=major         # major bump (1.x.y -> 2.0.0)
 ```
 
-This dispatches the Publish Release GitHub Actions workflow.
+This runs locally via `scripts/publish-release.sh` (not on GitHub Actions - GitHub runners are Intel with no Apple Intelligence and cannot run the full test suite).
 
-## What the workflow does
+## What the release script does
 
-1. Bumps `.version` via `make release-patch` / `release-minor` / `release-major`
-2. Regenerates `Sources/BuildInfo.swift` and README version badge
-3. Builds the release binary on `macos-26`
-4. Runs unit tests (`swift run apfel-tests`)
-5. Starts servers and runs 7 integration test suites
+1. Preflight checks (clean tree, on main, up to date with origin)
+2. Bumps `.version` via `make release-patch` / `release-minor` / `release-major`
+3. Builds the release binary
+4. Runs ALL 362 unit tests
+5. Runs ALL 7 integration test suites (157 tests, 0 skipped) with real Apple Intelligence
 6. Commits `.version`, `README.md`, `Sources/BuildInfo.swift`, tags, and pushes to main
 7. Packages `apfel-<version>-arm64-macos.tar.gz`
 8. Publishes GitHub Release with changelog and tarball
@@ -93,6 +93,14 @@ brew upgrade apfel
 - Emergency formula update: `brew bump-formula-pr apfel --url=<tarball-url> --sha256=<hash>`
 
 The release workflow also updates the custom tap (`Arthur-Ficial/homebrew-tap`) as a secondary channel for apfel-family tools. The `HOMEBREW_TAP_PUSH_TOKEN` secret is required for tap updates.
+
+## GitHub CI vs local testing
+
+GitHub CI (`ci.yml`) runs on every push/PR as a safety net, but it is a **subset**:
+- 362 unit tests (no model needed)
+- 21 model-free CLI integration tests (flags, help, version, file handling)
+
+GitHub CI **cannot** run the full integration suite because GitHub-hosted `macos-26` runners are Intel Macs without Apple Intelligence. The full 519-test qualification (362 unit + 157 integration across 7 suites) runs locally on a Mac with Apple Intelligence via `make preflight` and `make release`. This local run is the real gate - no release ships without it.
 
 ## Versioning rules
 
