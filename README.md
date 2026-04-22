@@ -24,7 +24,7 @@ Every Apple Silicon Mac with Apple Intelligence includes Apple's on-device found
 
 Tool calling works in both modes. Inference stays 100% on-device. The context window is 4096 tokens.
 
-An interactive mini chat (`apfel --chat`) also ships for quick testing - see [Quick testing chat](#quick-testing-chat) below. For a real chat UI, use [apfel-chat](https://github.com/Arthur-Ficial/apfel-chat).
+An interactive mini chat (`apfel --chat`) also ships for quick testing - see [Quick testing chat](#quick-testing-chat) below. For a more sophisticated chat, use [apfel-chat](https://github.com/Arthur-Ficial/apfel-chat).
 
 ![apfel CLI](screenshots/cli.png)
 
@@ -131,7 +131,7 @@ APFEL_TOKEN=$(uuidgen) APFEL_MCP=/path/to/tools.py brew services start apfel
 
 ### Quick testing chat
 
-A small interactive chat is included for kicking the tyres on a prompt or a local MCP server without writing a client. It is a byproduct of the UNIX tool and server work, not the main surface - for a real chat UI, use [apfel-chat](https://github.com/Arthur-Ficial/apfel-chat).
+A small interactive chat is included for kicking the tyres on a prompt or a local MCP server without writing a client. It is a byproduct of the UNIX tool and server work, not the main surface - for a more sophisticated chat, use [apfel-chat](https://github.com/Arthur-Ficial/apfel-chat).
 
 ```bash
 apfel --chat
